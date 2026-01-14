@@ -1,21 +1,14 @@
 package com.sofiarizos.backend.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sofiarizos.backend.model.Reserva;
-import com.sofiarizos.backend.security.FileValidator;
 import com.sofiarizos.backend.security.Sanitizer;
-import com.sofiarizos.backend.service.CloudinaryService;
 import com.sofiarizos.backend.service.EmailService;
 import com.sofiarizos.backend.service.ReservaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -27,85 +20,44 @@ public class ReservaController {
     private final ReservaService reservaService;
     private final EmailService emailService;
     private final Sanitizer sanitizer;
-    private final FileValidator fileValidator;
-    private final CloudinaryService cloudinaryService;
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private final Pattern phonePattern = Pattern.compile("^\\+?\\d{7,15}$");
-    private final Pattern emailPattern = Pattern.compile("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$");
+    private final Pattern emailPattern =
+            Pattern.compile("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$");
 
     public ReservaController(
             ReservaService reservaService,
             EmailService emailService,
-            Sanitizer sanitizer,
-            FileValidator fileValidator,
-            CloudinaryService cloudinaryService
+            Sanitizer sanitizer
     ) {
         this.reservaService = reservaService;
         this.emailService = emailService;
         this.sanitizer = sanitizer;
-        this.fileValidator = fileValidator;
-        this.cloudinaryService = cloudinaryService;
     }
 
-    // ================= CREAR RESERVA =================
+    // ================= CREAR RESERVA (JSON) =================
     @PostMapping
-    public ResponseEntity<?> crearReserva(
-            @RequestParam String nombre,
-            @RequestParam String email,
-            @RequestParam String telefono,
-            @RequestParam String fecha,
-            @RequestParam String hora,
-            @RequestParam(required = false) String tipoCabello,
-            @RequestParam(required = false) String textura,
-            @RequestParam(required = false) String cueroCabelludo,
-            @RequestParam(required = false) String objetivo,
-            @RequestParam(required = false) String rutina,
-            @RequestParam(required = false) String productos,
-            @RequestParam(required = false) List<MultipartFile> fotos
-    ) {
+    public ResponseEntity<?> crearReserva(@RequestBody Reserva r) {
         try {
-            nombre = sanitizer.clean(nombre);
-            email = sanitizer.clean(email);
-            telefono = sanitizer.clean(telefono);
+            // 🔐 Sanitizar
+            r.setNombre(sanitizer.clean(r.getNombre()));
+            r.setEmail(sanitizer.clean(r.getEmail()));
+            r.setTelefono(sanitizer.clean(r.getTelefono()));
 
-            if (!phonePattern.matcher(telefono).matches())
+            // ✅ Validaciones
+            if (!phonePattern.matcher(r.getTelefono()).matches()) {
                 return ResponseEntity.badRequest().body("Teléfono inválido");
-
-            if (!emailPattern.matcher(email).matches())
-                return ResponseEntity.badRequest().body("Email inválido");
-
-            Reserva r = new Reserva();
-            r.setNombre(nombre);
-            r.setEmail(email);
-            r.setTelefono(telefono);
-            r.setFecha(LocalDate.parse(fecha));
-            r.setHora(LocalTime.parse(hora, DateTimeFormatter.ofPattern("HH:mm")));
-            r.setTipoCabello(sanitizer.clean(tipoCabello));
-            r.setTextura(sanitizer.clean(textura));
-            r.setCueroCabelludo(sanitizer.clean(cueroCabelludo));
-            r.setObjetivo(sanitizer.clean(objetivo));
-            r.setCreadoEn(LocalDateTime.now());
-
-            if (rutina != null)
-                r.setRutina(rutina);
-
-            if (productos != null)
-                r.setProductos(productos);
-
-            if (fotos != null && !fotos.isEmpty()) {
-                List<String> urls = new ArrayList<>();
-                for (MultipartFile f : fotos) {
-                    fileValidator.validate(f);
-                    urls.add(cloudinaryService.uploadImage(f));
-                }
-                r.setFotos(objectMapper.writeValueAsString(urls));
             }
+
+            if (!emailPattern.matcher(r.getEmail()).matches()) {
+                return ResponseEntity.badRequest().body("Email inválido");
+            }
+
+            r.setCreadoEn(LocalDateTime.now());
 
             Reserva guardada = reservaService.guardarReserva(r);
 
-            // 📧 EMAIL (NO rompe la reserva)
+            // 📧 Email (NO rompe la reserva)
             try {
                 emailService.notificarReserva(
                         guardada.getNombre(),
@@ -126,7 +78,9 @@ public class ReservaController {
 
     // ================= HORAS OCUPADAS =================
     @GetMapping("/horas-ocupadas")
-    public ResponseEntity<List<String>> obtenerHorasOcupadas(@RequestParam String fecha) {
+    public ResponseEntity<List<String>> obtenerHorasOcupadas(
+            @RequestParam String fecha
+    ) {
         try {
             LocalDate date = LocalDate.parse(fecha);
 
