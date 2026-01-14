@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/reservas")
-@CrossOrigin(origins = "*")
 public class ReservaController {
 
     private final ReservaService reservaService;
