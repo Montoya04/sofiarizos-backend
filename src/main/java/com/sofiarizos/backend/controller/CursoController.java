@@ -13,7 +13,11 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/cursos")
-@CrossOrigin(origins = "*")
+@CrossOrigin(origins = {
+        "http://localhost:5173",
+        "https://sofiarizos.com",
+        "https://sofiarizos-frontend.vercel.app"
+})
 public class CursoController {
 
     private final CursoRepository cursoRepository;
@@ -30,39 +34,42 @@ public class CursoController {
         this.emailService = emailService;
     }
 
-    // ---------------- OBTENER CURSOS ----------------
+    // ================= OBTENER TODOS LOS CURSOS =================
     @GetMapping
     public ResponseEntity<List<Curso>> obtenerCursos() {
         return ResponseEntity.ok(cursoRepository.findAll());
     }
 
+    // ================= OBTENER CURSO POR ID =================
     @GetMapping("/{id}")
     public ResponseEntity<?> obtenerCursoPorId(@PathVariable Long id) {
         Optional<Curso> curso = cursoRepository.findById(id);
+
         if (curso.isPresent()) {
             return ResponseEntity.ok(curso.get());
-        } else {
-            return ResponseEntity.status(404)
-                    .body(Map.of("message", "Curso no encontrado"));
         }
+
+        return ResponseEntity.status(404)
+                .body(Map.of("message", "Curso no encontrado"));
     }
 
-    // ---------------- REINICIAR CUPO ----------------
+    // ================= REINICIAR CUPO =================
     @PutMapping("/{id}/reiniciar")
     public ResponseEntity<?> reiniciarCupo(@PathVariable Long id) {
-        Optional<Curso> curso = cursoRepository.findById(id);
-        if (curso.isPresent()) {
-            Curso c = curso.get();
-            c.setCupoDisponible(c.getCupoMaximo());
-            cursoRepository.save(c);
-            return ResponseEntity.ok(c);
-        } else {
-            return ResponseEntity.status(404)
-                    .body(Map.of("message", "Curso no encontrado"));
+        Optional<Curso> cursoOpt = cursoRepository.findById(id);
+
+        if (cursoOpt.isPresent()) {
+            Curso curso = cursoOpt.get();
+            curso.setCupoDisponible(curso.getCupoMaximo());
+            cursoRepository.save(curso);
+            return ResponseEntity.ok(curso);
         }
+
+        return ResponseEntity.status(404)
+                .body(Map.of("message", "Curso no encontrado"));
     }
 
-    // ---------------- INSCRIPCIÓN + EMAIL ----------------
+    // ================= INSCRIPCIÓN + EMAIL =================
     @PostMapping("/{id}/inscribirse")
     public ResponseEntity<?> inscribirseCurso(
             @PathVariable Long id,
@@ -71,13 +78,22 @@ public class CursoController {
         try {
             String nombreAlumno = body.get("nombre");
 
+            if (nombreAlumno == null || nombreAlumno.isBlank()) {
+                return ResponseEntity.badRequest()
+                        .body(Map.of("message", "El nombre es obligatorio"));
+            }
+
             Curso curso = cursoService.inscribirse(id);
 
-            // 📧 EMAIL
-            emailService.notificarCurso(
-                    curso.getNombre(),
-                    nombreAlumno
-            );
+            // 📧 Enviar email (no rompe la inscripción si falla)
+            try {
+                emailService.notificarCurso(
+                        curso.getNombre(),
+                        nombreAlumno
+                );
+            } catch (Exception e) {
+                System.err.println("⚠️ Error enviando correo: " + e.getMessage());
+            }
 
             return ResponseEntity.ok(
                     Map.of("message", "Inscripción realizada correctamente")
