@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -34,24 +35,48 @@ public class ReservaController {
         this.sanitizer = sanitizer;
     }
 
-    // ================= CREAR RESERVA (JSON) =================
-    @PostMapping
-    public ResponseEntity<?> crearReserva(@RequestBody Reserva r) {
+    // ================= CREAR RESERVA (MULTIPART) =================
+    @PostMapping(consumes = "multipart/form-data")
+    public ResponseEntity<?> crearReserva(
+            @RequestParam String nombre,
+            @RequestParam String email,
+            @RequestParam String telefono,
+            @RequestParam String fecha,
+            @RequestParam String hora,
+            @RequestParam(required = false) String tipoCabello,
+            @RequestParam(required = false) String textura,
+            @RequestParam(required = false) String cueroCabelludo,
+            @RequestParam(required = false) String objetivo,
+            @RequestParam(required = false) String rutina,
+            @RequestParam(required = false) String productos
+    ) {
         try {
             // 🔐 Sanitizar
-            r.setNombre(sanitizer.clean(r.getNombre()));
-            r.setEmail(sanitizer.clean(r.getEmail()));
-            r.setTelefono(sanitizer.clean(r.getTelefono()));
+            nombre = sanitizer.clean(nombre);
+            email = sanitizer.clean(email);
+            telefono = sanitizer.clean(telefono);
 
             // ✅ Validaciones
-            if (!phonePattern.matcher(r.getTelefono()).matches()) {
+            if (!phonePattern.matcher(telefono).matches()) {
                 return ResponseEntity.badRequest().body("Teléfono inválido");
             }
 
-            if (!emailPattern.matcher(r.getEmail()).matches()) {
+            if (!emailPattern.matcher(email).matches()) {
                 return ResponseEntity.badRequest().body("Email inválido");
             }
 
+            Reserva r = new Reserva();
+            r.setNombre(nombre);
+            r.setEmail(email);
+            r.setTelefono(telefono);
+            r.setFecha(LocalDate.parse(fecha));
+            r.setHora(LocalTime.parse(hora));
+            r.setTipoCabello(tipoCabello);
+            r.setTextura(textura);
+            r.setCueroCabelludo(cueroCabelludo);
+            r.setObjetivo(objetivo);
+            r.setRutina(rutina);
+            r.setProductos(productos);
             r.setCreadoEn(LocalDateTime.now());
 
             Reserva guardada = reservaService.guardarReserva(r);
@@ -70,8 +95,9 @@ public class ReservaController {
             return ResponseEntity.ok("Reserva creada correctamente");
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                    .body("Error en los datos enviados: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body("Error interno del servidor");
         }
     }
 
