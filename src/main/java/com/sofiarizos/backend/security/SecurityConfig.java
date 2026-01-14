@@ -45,7 +45,7 @@ public class SecurityConfig {
 
         config.setAllowedOrigins(List.of(
             "http://localhost:5173",
-            "https://sofiarizos.com"
+            "https://sofiarizos-frontend.vercel.app"
         ));
 
         config.setAllowedMethods(List.of(
@@ -61,6 +61,7 @@ public class SecurityConfig {
 
         return source;
     }
+
 
     // 🔐 Password Encoder
     @Bean
