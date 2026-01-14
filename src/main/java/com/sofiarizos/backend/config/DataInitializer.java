@@ -17,8 +17,8 @@ public class DataInitializer {
             if (cursoRepository.count() == 0) {
                 Curso curso = new Curso();
                 curso.setNombre("Masterclass personalizada");
-                curso.setCupoMaximo(10);
-                curso.setCupoDisponible(10);
+                curso.setCupoMaximo(1);
+                curso.setCupoDisponible(1);
 
                 cursoRepository.save(curso);
 
