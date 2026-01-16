@@ -23,32 +23,53 @@ public class AdminAuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // 🔐 LOGIN ADMIN
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
 
-        String email = body.get("email");
-        String password = body.get("password");
+        try {
+            String email = body.get("email");
+            String password = body.get("password");
 
-        Admin admin = adminRepository.findByEmail(email).orElse(null);
+            System.out.println("📩 EMAIL RECIBIDO: " + email);
+            System.out.println("🔑 PASSWORD RECIBIDO: " + password);
 
-        if (admin == null || !admin.isActivo()) {
+            Admin admin = adminRepository.findByEmail(email).orElse(null);
+
+            System.out.println("👤 ADMIN ENCONTRADO: " + admin);
+
+            if (admin == null || !admin.isActivo()) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body("Usuario o contraseña incorrectos");
+            }
+
+            System.out.println("🔐 PASSWORD EN BD: " + admin.getPassword());
+
+            if (!passwordEncoder.matches(password, admin.getPassword())) {
+                return ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body("Usuario o contraseña incorrectos");
+            }
+
+            // ✅ LOGIN OK
+            return ResponseEntity.ok(
+                    Map.of(
+                            "token", "LOGIN_OK",
+                            "email", admin.getEmail()
+                    )
+            );
+
+        } catch (Exception e) {
+            e.printStackTrace(); // 👈 MUY IMPORTANTE
             return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Usuario o contraseña incorrectos");
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(
+                            Map.of(
+                                    "error", "Error interno del servidor",
+                                    "detalle", e.getMessage()
+                            )
+                    );
         }
-
-        if (!passwordEncoder.matches(password, admin.getPassword())) {
-            return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Usuario o contraseña incorrectos");
-        }
-
-        // 🔐 Luego aquí puedes devolver JWT
-        return ResponseEntity.ok(
-                Map.of(
-                        "token", "LOGIN_OK",
-                        "email", admin.getEmail()
-                )
-        );
     }
 }
