@@ -1,5 +1,6 @@
 package com.sofiarizos.backend.controller;
 
+import com.cloudinary.http44.api.Response;
 import com.sofiarizos.backend.model.Curso;
 import com.sofiarizos.backend.repository.CursoRepository;
 import com.sofiarizos.backend.service.CursoService;
@@ -32,6 +33,24 @@ public class CursoController {
         this.cursoRepository = cursoRepository;
         this.cursoService = cursoService;
         this.emailService = emailService;
+    }
+
+    // ================= Ajustar Cupo =========================
+
+    @PutMapping("/{id}/ajustar-cupo")
+    public ResponseEntity<?> ajustarCupo(
+            @PathVariable Long id,
+            @RequestParam int cupoMaximo
+    ) {
+        Curso curso = cursoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Curso no encontrado"));
+
+        curso.setCupoMaximo(cupoMaximo);
+        curso.setCupoDisponible(cupoMaximo);
+
+        cursoRepository.save(curso);
+
+        return ResponseEntity.ok(curso);
     }
 
     // ================= OBTENER TODOS LOS CURSOS =================
