@@ -2,9 +2,7 @@ package com.sofiarizos.backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,13 +23,23 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+            // ❌ CSRF OFF (API REST)
             .csrf(csrf -> csrf.disable())
+
+            // 🌐 CORS
             .cors(Customizer.withDefaults())
+
+            // 🔓 AUTORIZACIÓN
             .authorizeHttpRequests(auth -> auth
+
+                // 👉 LOGIN ADMIN (OBLIGATORIO)
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/admin/**").authenticated()
+
+                // 👉 TODO lo demás permitido (React maneja el guard)
                 .anyRequest().permitAll()
             )
+
+            // ❌ NO FORM LOGIN
             .httpBasic(Customizer.withDefaults());
 
         return http.build();
@@ -48,7 +56,6 @@ public class SecurityConfig {
             "https://*.vercel.app"
         ));
 
-
         config.setAllowedMethods(List.of(
             "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
@@ -63,18 +70,9 @@ public class SecurityConfig {
         return source;
     }
 
-
-    // 🔐 Password Encoder
+    // 🔐 PASSWORD ENCODER
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    // 🔐 Authentication Manager
-    @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration authenticationConfiguration
-    ) throws Exception {
-        return authenticationConfiguration.getAuthenticationManager();
     }
 }
