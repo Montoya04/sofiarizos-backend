@@ -17,13 +17,13 @@ public class AdminInitializer {
     ) {
         return args -> {
 
-            String email = "admin@admin.com";
+            String email = "soficmrizos@gmail.com";
 
             if (adminRepository.findByEmail(email).isEmpty()) {
 
                 Admin admin = new Admin();
                 admin.setEmail(email);
-                admin.setPassword(passwordEncoder.encode("123456"));
+                admin.setPassword(passwordEncoder.encode("AySbenji14"));
                 admin.setActivo(true);
 
 
