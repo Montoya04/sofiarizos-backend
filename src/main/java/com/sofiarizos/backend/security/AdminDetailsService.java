@@ -5,7 +5,7 @@ import com.sofiarizos.backend.repository.AdminRepository;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
-@Service
+//@Service
 public class AdminDetailsService implements UserDetailsService {
 
     private final AdminRepository adminRepository;

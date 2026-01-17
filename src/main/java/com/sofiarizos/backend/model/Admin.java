@@ -21,5 +21,5 @@ public class Admin {
     private String password;
 
     @Column(nullable = false)
-    private Boolean activo = true;
+    private Boolean activo = true; // ✅ BOOLEAN
 }

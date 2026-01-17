@@ -18,34 +18,20 @@ import java.util.List;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    // 🔐 SEGURIDAD
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // ❌ CSRF OFF (API REST)
             .csrf(csrf -> csrf.disable())
-
-            // 🌐 CORS
             .cors(Customizer.withDefaults())
-
-            // 🔓 AUTORIZACIÓN
             .authorizeHttpRequests(auth -> auth
-
-                // 👉 LOGIN ADMIN (OBLIGATORIO)
                 .requestMatchers("/api/auth/**").permitAll()
-
-                // 👉 TODO lo demás permitido (React maneja el guard)
                 .anyRequest().permitAll()
-            )
-
-            // ❌ NO FORM LOGIN
-            .httpBasic(Customizer.withDefaults());
+            );
 
         return http.build();
     }
 
-    // 🌐 CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
@@ -70,7 +56,6 @@ public class SecurityConfig {
         return source;
     }
 
-    // 🔐 PASSWORD ENCODER
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
