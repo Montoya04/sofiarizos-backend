@@ -21,7 +21,9 @@ public class Admin {
     @Column(nullable = false)
     private String password;
 
-    private boolean activo = true;
+    @Column(nullable = false)
+    private Integer activo = 1;
+
 
     
 }

@@ -38,11 +38,12 @@ public class AdminAuthController {
 
             System.out.println("👤 ADMIN ENCONTRADO: " + admin);
 
-            if (admin == null || !admin.isActivo()) {
+            if (admin == null || admin.getActivo() == null || admin.getActivo() != 1) {
                 return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body("Usuario o contraseña incorrectos");
+                    .status(HttpStatus.UNAUTHORIZED)
+                    .body("Usuario o contraseña incorrectos");
             }
+
 
             System.out.println("🔐 PASSWORD EN BD: " + admin.getPassword());
 
