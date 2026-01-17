@@ -38,7 +38,7 @@ public class AdminAuthController {
 
             System.out.println("👤 ADMIN ENCONTRADO: " + admin);
 
-            if (admin == null || admin.getActivo() == null || admin.getActivo() != 1) {
+            if (admin == null || Boolean.FALSE.equals(admin.getActivo())) {
                 return ResponseEntity
                     .status(HttpStatus.UNAUTHORIZED)
                     .body("Usuario o contraseña incorrectos");

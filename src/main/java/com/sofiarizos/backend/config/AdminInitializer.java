@@ -24,7 +24,8 @@ public class AdminInitializer {
                 Admin admin = new Admin();
                 admin.setEmail(email);
                 admin.setPassword(passwordEncoder.encode("123456"));
-                admin.setActivo(1);
+                admin.setActivo(true);
+
 
 
                 adminRepository.save(admin);

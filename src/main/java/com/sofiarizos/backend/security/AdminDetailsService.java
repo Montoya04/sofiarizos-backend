@@ -22,9 +22,10 @@ public class AdminDetailsService implements UserDetailsService {
                 .orElseThrow(() ->
                         new UsernameNotFoundException("Admin no encontrado"));
 
-        if (admin.getActivo() == null || admin.getActivo() != 1) {
+        if (Boolean.FALSE.equals(admin.getActivo())) {
             throw new UsernameNotFoundException("Admin inactivo");
         }
+
 
 
         return User.builder()

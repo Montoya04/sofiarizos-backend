@@ -1,6 +1,5 @@
 package com.sofiarizos.backend.model;
 
-
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,8 +21,5 @@ public class Admin {
     private String password;
 
     @Column(nullable = false)
-    private Integer activo = 1;
-
-
-    
+    private Boolean activo = true;
 }
