@@ -2,10 +2,13 @@ package com.sofiarizos.backend.security;
 
 import com.sofiarizos.backend.model.Admin;
 import com.sofiarizos.backend.repository.AdminRepository;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
 
-//@Service
+import java.util.List;
+
+@Service
 public class AdminDetailsService implements UserDetailsService {
 
     private final AdminRepository adminRepository;
@@ -22,16 +25,14 @@ public class AdminDetailsService implements UserDetailsService {
                 .orElseThrow(() ->
                         new UsernameNotFoundException("Admin no encontrado"));
 
-        if (Boolean.FALSE.equals(admin.getActivo())) {
-            throw new UsernameNotFoundException("Admin inactivo");
-        }
-
-
-
-        return User.builder()
-                .username(admin.getEmail())
-                .password(admin.getPassword())
-                .roles("ADMIN")
-                .build();
+        return new User(
+                admin.getEmail(),
+                admin.getPassword(),
+                admin.getActivo() == 1,
+                true,
+                true,
+                true,
+                List.of(new SimpleGrantedAuthority("ROLE_ADMIN"))
+        );
     }
 }
