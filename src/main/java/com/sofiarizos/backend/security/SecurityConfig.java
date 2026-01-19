@@ -24,16 +24,26 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
+            // ❌ DESACTIVAR CSRF (API REST)
             .csrf(csrf -> csrf.disable())
+
+            // 🌐 CORS
             .cors(Customizer.withDefaults())
+
+            // 🔓 AUTORIZACIÓN
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .anyRequest().permitAll()
-            );
+            )
+
+            // ❌ DESACTIVAR SEGURIDAD POR DEFECTO
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable());
 
         return http.build();
     }
 
+    // 🌐 CONFIGURACIÓN CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
@@ -58,6 +68,7 @@ public class SecurityConfig {
         return source;
     }
 
+    // 🔐 PASSWORD ENCODER
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
