@@ -2,6 +2,7 @@ package com.sofiarizos.backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -23,15 +24,21 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            .cors()
-            .and()
-            .csrf().disable()
+            .csrf(csrf -> csrf.disable())
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/error").permitAll()
+                // 🔥 PERMITIR PREFLIGHT
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // 🔓 LOGIN
+                .requestMatchers("/api/auth/**").permitAll()
+
                 .anyRequest().permitAll()
             )
-            .formLogin().disable()
-            .httpBasic().disable();
+
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable());
 
         return http.build();
     }
@@ -43,13 +50,13 @@ public class SecurityConfig {
 
         config.setAllowCredentials(true);
         config.setAllowedOrigins(List.of(
-                "https://sofiarizos-frontend.vercel.app",
-                "http://localhost:5173"
+            "https://sofiarizos-frontend.vercel.app",
+            "http://localhost:5173"
+        ));
+        config.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE", "OPTIONS"
-        ));
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
