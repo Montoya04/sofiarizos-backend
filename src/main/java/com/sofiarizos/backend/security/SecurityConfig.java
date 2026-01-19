@@ -2,7 +2,6 @@ package com.sofiarizos.backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -24,45 +23,33 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // ❌ CSRF OFF (API REST)
-            .csrf(csrf -> csrf.disable())
-
-            // 🌐 CORS
-            .cors(Customizer.withDefaults())
-
-            // 🔓 AUTORIZACIÓN
+            .cors()
+            .and()
+            .csrf().disable()
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers(
-                    "/api/auth/**",
-                    "/error"
-                ).permitAll()
+                .requestMatchers("/api/auth/**", "/error").permitAll()
                 .anyRequest().permitAll()
             )
-
-            // ❌ DESACTIVAR LOGIN DE SPRING
-            .formLogin(form -> form.disable())
-            .httpBasic(basic -> basic.disable());
+            .formLogin().disable()
+            .httpBasic().disable();
 
         return http.build();
     }
 
-    // 🌐 CONFIGURACIÓN CORS
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOriginPatterns(List.of(
-            "http://localhost:5173",
-            "https://*.vercel.app"
-        ));
-
-        config.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
-        ));
-
-        config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(true);
+        config.setAllowedOrigins(List.of(
+                "https://sofiarizos-frontend.vercel.app",
+                "http://localhost:5173"
+        ));
+        config.setAllowedHeaders(List.of("*"));
+        config.setAllowedMethods(List.of(
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
@@ -71,7 +58,6 @@ public class SecurityConfig {
         return source;
     }
 
-    // 🔐 PASSWORD ENCODER
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
