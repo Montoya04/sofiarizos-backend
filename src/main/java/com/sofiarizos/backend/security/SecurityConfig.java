@@ -10,8 +10,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.http.HttpMethod;
-import org.springframework.security.config.http.SessionCreationPolicy;
 
 import java.util.List;
 
@@ -27,15 +25,8 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/api/reservas/**").permitAll()
-                .requestMatchers("/api/cursos/**").permitAll()
-                .requestMatchers("/api/inscripciones/**").permitAll()
-                .anyRequest().authenticated()
-            )
-
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                // 🔓 TODO LIBRE (NO JWT)
+                .anyRequest().permitAll()
             )
 
             .formLogin(form -> form.disable())
@@ -44,8 +35,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-
-    // ✅ CORS DEFINITIVO
+    // ✅ CORS (SE QUEDA IGUAL)
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
