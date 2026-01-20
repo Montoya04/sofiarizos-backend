@@ -42,10 +42,13 @@ public class ReservaService {
     }
 
     public List<Reserva> obtenerTodas() {
-    List<Reserva> reservas = reservaRepository.findAll();
-    reservas.forEach(Reserva::actualizarListas);
-    return reservas;
-}
+        List<Reserva> reservas = reservaRepository.findAll();
+
+        reservas.forEach(Reserva::actualizarListas);
+
+        return reservas;
+    }
+
 
     public List<LocalTime> obtenerHorasOcupadas(LocalDate fecha) {
         return reservaRepository.findHorasByFecha(fecha);
