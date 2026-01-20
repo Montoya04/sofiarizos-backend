@@ -23,41 +23,27 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // ✅ CORS PRIMERO
+            .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-            // ✅ DESACTIVAR CSRF (API REST)
-            .csrf(csrf -> csrf.disable())
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/reservas/**").permitAll()
+                .requestMatchers("/api/cursos/**").permitAll()
+                .requestMatchers("/api/inscripciones/**").permitAll()
+                .anyRequest().authenticated()
+            )
 
-            // ✅ NO SESIONES (IMPORTANTE PARA EVITAR 500)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
-            .authorizeHttpRequests(auth -> auth
-
-                // 🔓 LOGIN Y AUTH (NO SE TOCA)
-                .requestMatchers("/api/auth/**").permitAll()
-
-                // 🔓 CURSOS Y RESERVAS (FIX DEFINITIVO)
-                .requestMatchers("/api/cursos/**").permitAll()
-                .requestMatchers("/api/reservas/**").permitAll()
-
-                // 🔓 PREFLIGHT
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                // 🔒 LO DEMÁS
-                .anyRequest().authenticated()
-            )
-
-            // ❌ NO FORM LOGIN
             .formLogin(form -> form.disable())
-
-            // ❌ NO BASIC
             .httpBasic(basic -> basic.disable());
 
         return http.build();
     }
+
 
     // ✅ CORS DEFINITIVO
     @Bean
