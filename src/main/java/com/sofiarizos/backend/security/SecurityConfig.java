@@ -2,7 +2,6 @@ package com.sofiarizos.backend.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -25,15 +24,14 @@ public class SecurityConfig {
 
         http
             .csrf(csrf -> csrf.disable())
+
+            // 🔥 CORS ANTES DE AUTH
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
             .authorizeHttpRequests(auth -> auth
                 // 🔥 PERMITIR PREFLIGHT
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                // 🔓 LOGIN
+                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-
                 .anyRequest().permitAll()
             )
 
@@ -48,15 +46,17 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowCredentials(true);
         config.setAllowedOrigins(List.of(
-            "https://sofiarizos-frontend.vercel.app",
-            "http://localhost:5173"
+            "http://localhost:5173",
+            "https://sofiarizos-frontend.vercel.app"
         ));
+
         config.setAllowedMethods(List.of(
             "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
+
         config.setAllowedHeaders(List.of("*"));
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
