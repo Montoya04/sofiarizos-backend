@@ -11,6 +11,11 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
+@CrossOrigin(
+    origins = "https://sofiarizos-frontend.vercel.app",
+    allowedHeaders = "*",
+    methods = {RequestMethod.POST, RequestMethod.OPTIONS}
+)
 public class AdminAuthController {
 
     private final AdminRepository adminRepository;
@@ -22,54 +27,37 @@ public class AdminAuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // 🔐 LOGIN ADMIN
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
 
-        try {
-            String email = body.get("email");
-            String password = body.get("password");
+        String email = body.get("email");
+        String password = body.get("password");
 
-            System.out.println("📩 EMAIL RECIBIDO: " + email);
-            System.out.println("🔑 PASSWORD RECIBIDO: " + password);
+        Admin admin = adminRepository.findByEmail(email).orElse(null);
 
-            Admin admin = adminRepository.findByEmail(email).orElse(null);
-
-            System.out.println("👤 ADMIN ENCONTRADO: " + admin);
-
-            if (admin == null || Boolean.FALSE.equals(admin.getActivo())) {
-                return ResponseEntity
-                    .status(HttpStatus.UNAUTHORIZED)
-                    .body("Usuario o contraseña incorrectos");
-            }
-
-
-            System.out.println("🔐 PASSWORD EN BD: " + admin.getPassword());
-
-            if (!passwordEncoder.matches(password, admin.getPassword())) {
-                return ResponseEntity
-                        .status(HttpStatus.UNAUTHORIZED)
-                        .body("Usuario o contraseña incorrectos");
-            }
-
-            // ✅ LOGIN OK
-            return ResponseEntity.ok(
-                    Map.of(
-                            "token", "LOGIN_OK",
-                            "email", admin.getEmail()
-                    )
-            );
-
-        } catch (Exception e) {
-            e.printStackTrace(); // 👈 MUY IMPORTANTE
+        if (admin == null || Boolean.FALSE.equals(admin.getActivo())) {
             return ResponseEntity
-                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(
-                            Map.of(
-                                    "error", "Error interno del servidor",
-                                    "detalle", e.getMessage()
-                            )
-                    );
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Usuario o contraseña incorrectos");
         }
+
+        if (!passwordEncoder.matches(password, admin.getPassword())) {
+            return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED)
+                .body("Usuario o contraseña incorrectos");
+        }
+
+        return ResponseEntity.ok(
+            Map.of(
+                "token", "LOGIN_OK",
+                "email", admin.getEmail()
+            )
+        );
+    }
+
+    // 👇 ESTO ARREGLA EL PREFLIGHT
+    @RequestMapping(value = "/login", method = RequestMethod.OPTIONS)
+    public ResponseEntity<?> corsPreflight() {
+        return ResponseEntity.ok().build();
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
 
 import java.util.List;
 
@@ -21,14 +22,19 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         http
-            // 🔴 CLAVE
+            // ✅ CORS primero (MUY IMPORTANTE)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
             .csrf(csrf -> csrf.disable())
 
             .authorizeHttpRequests(auth -> auth
+                // ✅ LOGIN LIBRE
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
+
+                // ✅ PREFLIGHT OPTIONS
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // ✅ REST API
                 .anyRequest().permitAll()
             )
 
@@ -38,7 +44,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // 🔥 CORS REAL
+    // ✅ CORS DEFINITIVO
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
 
@@ -66,5 +72,5 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-}
+    }
 }
