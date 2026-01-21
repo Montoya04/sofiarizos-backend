@@ -78,7 +78,10 @@ public class ReservaController {
 
             Reserva guardada = reservaService.guardarReserva(r);
 
-            return ResponseEntity.ok("Reserva creada correctamente");
+            return ResponseEntity.ok(
+                java.util.Map.of("message", "Reserva creada correctamente")
+            );
+
 
         } catch (Exception e) {
             e.printStackTrace();
