@@ -2,7 +2,6 @@ package com.sofiarizos.backend.controller;
 
 import com.sofiarizos.backend.model.Reserva;
 import com.sofiarizos.backend.security.Sanitizer;
-import com.sofiarizos.backend.service.EmailService;
 import com.sofiarizos.backend.service.ReservaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,31 +11,24 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
-import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/reservas")
+@CrossOrigin(origins = "*")
 public class ReservaController {
 
     private final ReservaService reservaService;
-    private final EmailService emailService;
     private final Sanitizer sanitizer;
-
-    private final Pattern phonePattern = Pattern.compile("^\\+?\\d{7,15}$");
-    private final Pattern emailPattern =
-            Pattern.compile("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$");
 
     public ReservaController(
             ReservaService reservaService,
-            EmailService emailService,
             Sanitizer sanitizer
     ) {
         this.reservaService = reservaService;
-        this.emailService = emailService;
         this.sanitizer = sanitizer;
     }
 
-    // ================= CREAR RESERVA (MULTIPART) =================
+    // ================= CREAR RESERVA =================
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> crearReserva(
             @RequestParam String nombre,
@@ -50,21 +42,29 @@ public class ReservaController {
             @RequestParam(required = false) String objetivo,
             @RequestParam(required = false) String rutina,
             @RequestParam(required = false) String productos,
-
-            // 🔴 ESTA ES LA LÍNEA QUE FALTABA
             @RequestParam(required = false) List<MultipartFile> fotos
     ) {
         try {
+            // Sanitizar
             nombre = sanitizer.clean(nombre);
             email = sanitizer.clean(email);
             telefono = sanitizer.clean(telefono);
+
+            LocalDate fechaParsed = LocalDate.parse(fecha);
+            LocalTime horaParsed = LocalTime.parse(hora);
+
+            // VALIDAR CUPO ANTES DE GUARDAR
+            if (reservaService.existeReserva(fechaParsed, horaParsed)) {
+                return ResponseEntity.badRequest()
+                        .body("Cupos agotados");
+            }
 
             Reserva r = new Reserva();
             r.setNombre(nombre);
             r.setEmail(email);
             r.setTelefono(telefono);
-            r.setFecha(LocalDate.parse(fecha));
-            r.setHora(LocalTime.parse(hora));
+            r.setFecha(fechaParsed);
+            r.setHora(horaParsed);
             r.setTipoCabello(tipoCabello);
             r.setTextura(textura);
             r.setCueroCabelludo(cueroCabelludo);
@@ -73,15 +73,11 @@ public class ReservaController {
             r.setProductos(productos);
             r.setCreadoEn(LocalDateTime.now());
 
-            // si no quieres guardar fotos aún, NO pasa nada
-            // simplemente no las procesas
-
-            Reserva guardada = reservaService.guardarReserva(r);
+            reservaService.guardarReserva(r);
 
             return ResponseEntity.ok(
-                java.util.Map.of("message", "Reserva creada correctamente")
+                    java.util.Map.of("message", "Reserva creada correctamente")
             );
-
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -89,7 +85,6 @@ public class ReservaController {
                     .body("Error interno del servidor");
         }
     }
-
 
     // ================= HORAS OCUPADAS =================
     @GetMapping("/horas-ocupadas")
@@ -105,9 +100,11 @@ public class ReservaController {
                     .toList();
 
             return ResponseEntity.ok(horas);
+
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.ok(List.of());
+            // 🔴 IMPORTANTE: NO devolver 200 en error
+            return ResponseEntity.internalServerError().body(List.of());
         }
     }
 

@@ -11,50 +11,29 @@ import java.util.List;
 @Service
 public class ReservaService {
 
-    private final ReservaRepository reservaRepository;
+    private final ReservaRepository repo;
 
-    public ReservaService(ReservaRepository reservaRepository) {
-        this.reservaRepository = reservaRepository;
+    public ReservaService(ReservaRepository repo) {
+        this.repo = repo;
     }
 
-    public Reserva guardarReserva(Reserva reserva) {
+    public Reserva guardarReserva(Reserva r) {
+        return repo.save(r);
+    }
 
-        if (reserva.getNombre() == null || reserva.getNombre().isBlank())
-            throw new IllegalArgumentException("El nombre es obligatorio");
+    public boolean existeReserva(LocalDate fecha, LocalTime hora) {
+        return repo.existsByFechaAndHora(fecha, hora);
+    }
 
-        if (reserva.getEmail() == null || reserva.getEmail().isBlank())
-            throw new IllegalArgumentException("El email es obligatorio");
-
-        if (reserva.getTelefono() == null || reserva.getTelefono().isBlank())
-            throw new IllegalArgumentException("El teléfono es obligatorio");
-
-        if (reserva.getFecha().isBefore(LocalDate.now()))
-            throw new IllegalArgumentException("La fecha no puede ser pasada");
-
-        if (reserva.getHora().isBefore(LocalTime.of(7, 0)) ||
-            reserva.getHora().isAfter(LocalTime.of(22, 0)))
-            throw new IllegalArgumentException("Hora fuera del rango permitido");
-
-        if (reservaRepository.existsByFechaAndHora(reserva.getFecha(), reserva.getHora()))
-            throw new IllegalArgumentException("La hora seleccionada ya está ocupada");
-
-        return reservaRepository.save(reserva);
+    public List<LocalTime> obtenerHorasOcupadas(LocalDate fecha) {
+        return repo.findHorasByFecha(fecha);
     }
 
     public List<Reserva> obtenerTodas() {
-        List<Reserva> reservas = reservaRepository.findAll();
-
-        reservas.forEach(Reserva::actualizarListas);
-
-        return reservas;
-    }
-
-
-    public List<LocalTime> obtenerHorasOcupadas(LocalDate fecha) {
-        return reservaRepository.findHorasByFecha(fecha);
+        return repo.findAll();
     }
 
     public void eliminarPorId(Long id) {
-        reservaRepository.deleteById(id);
+        repo.deleteById(id);
     }
 }
