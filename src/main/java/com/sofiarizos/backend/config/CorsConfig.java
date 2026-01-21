@@ -16,20 +16,26 @@ public class CorsConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
+        // 🔴 NECESARIO para formularios y cookies
         config.setAllowCredentials(true);
 
-        config.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "https://sofiarizos-frontend.vercel.app"
+        // ✅ ORÍGENES EXPLÍCITOS (NUNCA "*")
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",
+                "https://sofiarizos-frontend.vercel.app"
         ));
 
+        // ✅ Headers permitidos
         config.setAllowedHeaders(List.of("*"));
+
+        // ✅ Métodos permitidos
         config.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
+
         source.registerCorsConfiguration("/**", config);
 
         return new CorsFilter(source);
