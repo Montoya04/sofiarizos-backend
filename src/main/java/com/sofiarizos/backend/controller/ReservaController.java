@@ -6,6 +6,7 @@ import com.sofiarizos.backend.service.EmailService;
 import com.sofiarizos.backend.service.ReservaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,66 +38,54 @@ public class ReservaController {
 
     // ================= CREAR RESERVA (MULTIPART) =================
     @PostMapping(consumes = "multipart/form-data")
-public ResponseEntity<?> crearReserva(
-        @RequestParam String nombre,
-        @RequestParam String email,
-        @RequestParam String telefono,
-        @RequestParam String fecha,
-        @RequestParam String hora,
-        @RequestParam(required = false) String tipoCabello,
-        @RequestParam(required = false) String textura,
-        @RequestParam(required = false) String cueroCabelludo,
-        @RequestParam(required = false) String objetivo,
-        @RequestParam(required = false) String rutina,
-        @RequestParam(required = false) String productos,
-        @RequestParam(required = false) List<org.springframework.web.multipart.MultipartFile> fotos
-) {
-    try {
-        nombre = sanitizer.clean(nombre);
-        email = sanitizer.clean(email);
-        telefono = sanitizer.clean(telefono);
+    public ResponseEntity<?> crearReserva(
+            @RequestParam String nombre,
+            @RequestParam String email,
+            @RequestParam String telefono,
+            @RequestParam String fecha,
+            @RequestParam String hora,
+            @RequestParam(required = false) String tipoCabello,
+            @RequestParam(required = false) String textura,
+            @RequestParam(required = false) String cueroCabelludo,
+            @RequestParam(required = false) String objetivo,
+            @RequestParam(required = false) String rutina,
+            @RequestParam(required = false) String productos,
 
-        if (!phonePattern.matcher(telefono).matches()) {
-            return ResponseEntity.badRequest().body("Teléfono inválido");
-        }
-
-        if (!emailPattern.matcher(email).matches()) {
-            return ResponseEntity.badRequest().body("Email inválido");
-        }
-
-        Reserva r = new Reserva();
-        r.setNombre(nombre);
-        r.setEmail(email);
-        r.setTelefono(telefono);
-        r.setFecha(LocalDate.parse(fecha));
-        r.setHora(LocalTime.parse(hora));
-        r.setTipoCabello(tipoCabello);
-        r.setTextura(textura);
-        r.setCueroCabelludo(cueroCabelludo);
-        r.setObjetivo(objetivo);
-        r.setRutina(rutina);
-        r.setProductos(productos);
-        r.setCreadoEn(LocalDateTime.now());
-
-        // ⚠️ NO guardes fotos si no las usas (por ahora)
-        Reserva guardada = reservaService.guardarReserva(r);
-
+            // 🔴 ESTA ES LA LÍNEA QUE FALTABA
+            @RequestParam(required = false) List<MultipartFile> fotos
+    ) {
         try {
-            emailService.notificarReserva(
-                    guardada.getNombre(),
-                    guardada.getFecha().toString(),
-                    guardada.getHora().toString()
-            );
-        } catch (Exception ignored) {}
+            nombre = sanitizer.clean(nombre);
+            email = sanitizer.clean(email);
+            telefono = sanitizer.clean(telefono);
 
-        return ResponseEntity.ok("Reserva creada correctamente");
+            Reserva r = new Reserva();
+            r.setNombre(nombre);
+            r.setEmail(email);
+            r.setTelefono(telefono);
+            r.setFecha(LocalDate.parse(fecha));
+            r.setHora(LocalTime.parse(hora));
+            r.setTipoCabello(tipoCabello);
+            r.setTextura(textura);
+            r.setCueroCabelludo(cueroCabelludo);
+            r.setObjetivo(objetivo);
+            r.setRutina(rutina);
+            r.setProductos(productos);
+            r.setCreadoEn(LocalDateTime.now());
 
-    } catch (Exception e) {
-        e.printStackTrace();
-        return ResponseEntity.internalServerError()
-                .body("Error interno del servidor");
+            // si no quieres guardar fotos aún, NO pasa nada
+            // simplemente no las procesas
+
+            Reserva guardada = reservaService.guardarReserva(r);
+
+            return ResponseEntity.ok("Reserva creada correctamente");
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.internalServerError()
+                    .body("Error interno del servidor");
+        }
     }
-}
 
 
     // ================= HORAS OCUPADAS =================
