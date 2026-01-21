@@ -41,18 +41,19 @@ public class SecurityConfig {
 
         CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "https://sofiarizos.com",
-            "https://sofiarizos-frontend.vercel.app"
+        config.setAllowedOriginPatterns(List.of(
+                "http://localhost:5173",
+                "https://sofiarizos-frontend.vercel.app"
         ));
 
         config.setAllowedMethods(List.of(
-            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(false);
+
+        // 🔴 IMPORTANTE
+        config.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
@@ -61,6 +62,7 @@ public class SecurityConfig {
 
         return source;
     }
+
 
     // 🔐 PASSWORDS (NO SE TOCA)
     @Bean
