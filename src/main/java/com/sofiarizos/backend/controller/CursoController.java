@@ -1,6 +1,5 @@
 package com.sofiarizos.backend.controller;
 
-import com.cloudinary.http44.api.Response;
 import com.sofiarizos.backend.model.Curso;
 import com.sofiarizos.backend.repository.CursoRepository;
 import com.sofiarizos.backend.service.CursoService;
@@ -35,24 +34,6 @@ public class CursoController {
         this.emailService = emailService;
     }
 
-    // ================= Ajustar Cupo =========================
-
-    @PutMapping("/{id}/ajustar-cupo")
-    public ResponseEntity<?> ajustarCupo(
-            @PathVariable Long id,
-            @RequestParam int cupoMaximo
-    ) {
-        Curso curso = cursoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Curso no encontrado"));
-
-        curso.setCupoMaximo(cupoMaximo);
-        curso.setCupoDisponible(cupoMaximo);
-
-        cursoRepository.save(curso);
-
-        return ResponseEntity.ok(curso);
-    }
-
     // ================= OBTENER TODOS LOS CURSOS =================
     @GetMapping
     public ResponseEntity<List<Curso>> obtenerCursos() {
@@ -64,28 +45,21 @@ public class CursoController {
     public ResponseEntity<?> obtenerCursoPorId(@PathVariable Long id) {
         Optional<Curso> curso = cursoRepository.findById(id);
 
-        if (curso.isPresent()) {
-            return ResponseEntity.ok(curso.get());
-        }
-
-        return ResponseEntity.status(404)
-                .body(Map.of("message", "Curso no encontrado"));
+        return curso.<ResponseEntity<?>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(404)
+                        .body(Map.of("message", "Curso no encontrado")));
     }
 
-    // ================= REINICIAR CUPO =================
+    // ================= REINICIAR CUPO (SOLO DISPONIBLE) =================
     @PutMapping("/{id}/reiniciar")
     public ResponseEntity<?> reiniciarCupo(@PathVariable Long id) {
-        Optional<Curso> cursoOpt = cursoRepository.findById(id);
+        Curso curso = cursoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Curso no encontrado"));
 
-        if (cursoOpt.isPresent()) {
-            Curso curso = cursoOpt.get();
-            curso.setCupoDisponible(curso.getCupoMaximo());
-            cursoRepository.save(curso);
-            return ResponseEntity.ok(curso);
-        }
+        curso.setCupoDisponible(curso.getCupoMaximo());
+        cursoRepository.save(curso);
 
-        return ResponseEntity.status(404)
-                .body(Map.of("message", "Curso no encontrado"));
+        return ResponseEntity.ok(curso);
     }
 
     // ================= INSCRIPCIÓN + EMAIL =================
