@@ -4,32 +4,39 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
+
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-
 
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
 @Table(name = "reservas")
 public class Reserva {
 
+    // ================= ID =================
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // ================= DATOS PERSONALES =================
     private String nombre;
     private String email;
     private String telefono;
+
+    // ================= FECHA Y HORA =================
     private LocalDate fecha;
     private LocalTime hora;
+
+    // ================= DETALLES =================
     private String tipoCabello;
     private String textura;
     private String cueroCabelludo;
     private String objetivo;
 
+    // ================= CAMPOS JSON =================
     @Column(columnDefinition = "TEXT")
     private String rutina;
 
@@ -39,20 +46,27 @@ public class Reserva {
     @Column(columnDefinition = "TEXT")
     private String fotos;
 
+    // ================= AUDITORÍA =================
     @Column(name = "creado_en", nullable = false)
     private LocalDateTime creadoEn;
 
-    // ---------------- TRANSIENT ----------------
+    // ================= TRANSIENT (PARA EL FRONT) =================
     @Transient
-    public List<String> fotosLista = new ArrayList<>();
+    private List<String> rutinaLista = new ArrayList<>();
 
     @Transient
-    public List<String> rutinaLista = new ArrayList<>();
+    private List<String> productosLista = new ArrayList<>();
 
     @Transient
-    public List<String> productosLista = new ArrayList<>();
+    private List<String> fotosLista = new ArrayList<>();
 
-    // ---------------- GETTERS Y SETTERS ----------------
+    // ================= JPA CALLBACK =================
+    @PostLoad
+    public void onLoad() {
+        actualizarListas();
+    }
+
+    // ================= GETTERS & SETTERS =================
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -95,25 +109,36 @@ public class Reserva {
     public LocalDateTime getCreadoEn() { return creadoEn; }
     public void setCreadoEn(LocalDateTime creadoEn) { this.creadoEn = creadoEn; }
 
-    // ---------------- MÉTODO PARA PARSEAR JSON ----------------
-    public void actualizarListas() {
+    public List<String> getRutinaLista() { return rutinaLista; }
+    public List<String> getProductosLista() { return productosLista; }
+    public List<String> getFotosLista() { return fotosLista; }
+
+    // ================= PARSEO JSON =================
+    private void actualizarListas() {
         ObjectMapper mapper = new ObjectMapper();
-        try {
-            if (this.fotos != null && !this.fotos.isEmpty()) {
-                this.fotosLista = mapper.readValue(this.fotos, new TypeReference<List<String>>() {});
-            }
-        } catch (Exception e) { this.fotosLista = new ArrayList<>(); }
 
         try {
-            if (this.rutina != null && !this.rutina.isEmpty()) {
-                this.rutinaLista = mapper.readValue(this.rutina, new TypeReference<List<String>>() {});
+            if (rutina != null && !rutina.isBlank()) {
+                rutinaLista = mapper.readValue(rutina, new TypeReference<List<String>>() {});
             }
-        } catch(Exception e) { this.rutinaLista = new ArrayList<>(); }
+        } catch (Exception e) {
+            rutinaLista = new ArrayList<>();
+        }
 
         try {
-            if (this.productos != null && !this.productos.isEmpty()) {
-                this.productosLista = mapper.readValue(this.productos, new TypeReference<List<String>>() {});
+            if (productos != null && !productos.isBlank()) {
+                productosLista = mapper.readValue(productos, new TypeReference<List<String>>() {});
             }
-        } catch(Exception e) { this.productosLista = new ArrayList<>(); }
+        } catch (Exception e) {
+            productosLista = new ArrayList<>();
+        }
+
+        try {
+            if (fotos != null && !fotos.isBlank()) {
+                fotosLista = mapper.readValue(fotos, new TypeReference<List<String>>() {});
+            }
+        } catch (Exception e) {
+            fotosLista = new ArrayList<>();
+        }
     }
 }
