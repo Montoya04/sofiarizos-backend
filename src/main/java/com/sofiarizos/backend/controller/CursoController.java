@@ -63,6 +63,7 @@ public class CursoController {
     }
 
     // ================= INSCRIPCIÓN + EMAIL =================
+    // ================= INSCRIPCIÓN + EMAIL =================
     @PostMapping("/{id}/inscribirse")
     public ResponseEntity<?> inscribirseCurso(
             @PathVariable Long id,
@@ -76,17 +77,20 @@ public class CursoController {
                         .body(Map.of("message", "El nombre es obligatorio"));
             }
 
+            // 🔹 Inscripción (esto debe responder rápido)
             Curso curso = cursoService.inscribirse(id);
 
-            // 📧 Enviar email (no rompe la inscripción si falla)
-            try {
-                emailService.notificarCurso(
-                        curso.getNombre(),
-                        nombreAlumno
-                );
-            } catch (Exception e) {
-                System.err.println("⚠️ Error enviando correo: " + e.getMessage());
-            }
+            // 📧 EMAIL EN SEGUNDO PLANO (NO BLOQUEA)
+            new Thread(() -> {
+                try {
+                    emailService.notificarCurso(
+                            curso.getNombre(),
+                            nombreAlumno
+                    );
+                } catch (Exception e) {
+                    System.err.println("⚠️ Error enviando correo: " + e.getMessage());
+                }
+            }).start();
 
             return ResponseEntity.ok(
                     Map.of("message", "Inscripción realizada correctamente")
@@ -97,4 +101,5 @@ public class CursoController {
                     .body(Map.of("message", e.getMessage()));
         }
     }
+
 }
