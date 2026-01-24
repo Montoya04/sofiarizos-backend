@@ -5,8 +5,11 @@ import com.sofiarizos.backend.model.Curso;
 import com.sofiarizos.backend.model.Inscripcion;
 import com.sofiarizos.backend.repository.CursoRepository;
 import com.sofiarizos.backend.repository.InscripcionRepository;
+import jakarta.transaction.Transactional;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class InscripcionService {
@@ -14,16 +17,17 @@ public class InscripcionService {
     private final InscripcionRepository repository;
     private final CursoRepository cursoRepository;
 
-    public InscripcionService(InscripcionRepository repository, CursoRepository cursoRepository) {
+    public InscripcionService(InscripcionRepository repository,
+                              CursoRepository cursoRepository) {
         this.repository = repository;
         this.cursoRepository = cursoRepository;
     }
 
+    // ================= CREAR INSCRIPCIÓN =================
+    @Transactional
     public Inscripcion crearInscripcion(InscripcionDTO dto, String ip) {
 
-        // ==========================
-        // 1) Sanitizar datos
-        // ==========================
+        // 1️⃣ Sanitizar
         String nombre = StringEscapeUtils.escapeHtml4(dto.getNombre());
         String email = StringEscapeUtils.escapeHtml4(dto.getEmail());
         String telefono = StringEscapeUtils.escapeHtml4(dto.getTelefono());
@@ -32,54 +36,40 @@ public class InscripcionService {
                 : null;
         String cursoNombre = StringEscapeUtils.escapeHtml4(dto.getCurso());
 
-        // ==========================
-        // 2) Bloqueo de palabras maliciosas
-        // ==========================
-        String[] peligrosas = {
-                "<script", "SELECT ", "DROP ", "DELETE ",
-                "INSERT ", "--", "' OR '", "\" OR \""
-        };
-
-        for (String p : peligrosas) {
-            if (nombre.contains(p) || email.contains(p) || telefono.contains(p)
-                    || (comentario != null && comentario.contains(p))) {
-
-                throw new IllegalArgumentException("Contenido inválido detectado.");
-            }
-        }
-
-        // ==========================
-        // 3) Verificar curso existente
-        // ==========================
+        // 2️⃣ Validar curso
         Curso curso = cursoRepository.findByNombre(cursoNombre);
         if (curso == null) {
-            throw new IllegalArgumentException("El curso no existe.");
+            throw new RuntimeException("El curso no existe");
         }
 
         if (curso.getCupoDisponible() <= 0) {
-            throw new IllegalArgumentException("Este curso ya no tiene cupos disponibles.");
+            throw new RuntimeException("Este curso ya no tiene cupos disponibles");
         }
 
-        // ==========================
-        // 4) Construir la inscripción
-        // ==========================
+        // 3️⃣ Crear inscripción
         Inscripcion inscripcion = new Inscripcion();
         inscripcion.setNombre(nombre);
         inscripcion.setEmail(email);
         inscripcion.setTelefono(telefono);
         inscripcion.setComentario(comentario);
         inscripcion.setCurso(cursoNombre);
-        inscripcion.setIp(ip); // Guardamos la IP
+        inscripcion.setIp(ip);
 
-        // ==========================
-        // 5) Restar cupo
-        // ==========================
-        curso.setCupoDisponible(curso.getCupoDisponible() - 1);
+        // 4️⃣ Lógica de cupos
+        if (curso.getNombre().equalsIgnoreCase("Masterclass Personalizada")) {
+            curso.setCupoMaximo(1);
+            curso.setCupoDisponible(0);
+        } else {
+            curso.setCupoDisponible(curso.getCupoDisponible() - 1);
+        }
+
         cursoRepository.save(curso);
 
-        // ==========================
-        // 6) Guardar inscripción
-        // ==========================
         return repository.save(inscripcion);
+    }
+
+    // ================= LISTAR INSCRIPCIONES =================
+    public List<Inscripcion> listarInscripciones() {
+        return repository.findAll();
     }
 }

@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -32,10 +33,8 @@ public class InscripcionController {
             HttpServletRequest request
     ) {
         try {
-            // 🌐 IP DEL USUARIO
             String ip = request.getRemoteAddr();
 
-            // ✅ Crear inscripción (incluye validaciones)
             Inscripcion nueva = service.crearInscripcion(dto, ip);
 
             return ResponseEntity.ok(
@@ -47,8 +46,6 @@ public class InscripcionController {
             );
 
         } catch (RuntimeException e) {
-            System.err.println("Error al crear inscripción: " + e.getMessage());
-
             return ResponseEntity.badRequest().body(
                     Map.of(
                             "success", false,
@@ -56,5 +53,11 @@ public class InscripcionController {
                     )
             );
         }
+    }
+
+    // ================= LISTAR INSCRIPCIONES (ADMIN) =================
+    @GetMapping
+    public ResponseEntity<List<Inscripcion>> listarInscripciones() {
+        return ResponseEntity.ok(service.listarInscripciones());
     }
 }
