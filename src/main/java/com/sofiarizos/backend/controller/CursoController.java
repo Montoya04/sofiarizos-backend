@@ -1,6 +1,7 @@
 package com.sofiarizos.backend.controller;
 
 import com.sofiarizos.backend.model.Curso;
+import com.sofiarizos.backend.model.Inscripcion;
 import com.sofiarizos.backend.repository.CursoRepository;
 import com.sofiarizos.backend.service.CursoService;
 import com.sofiarizos.backend.service.EmailService;
@@ -65,35 +66,24 @@ public class CursoController {
     // ================= INSCRIPCIÓN + EMAIL =================
     // ================= INSCRIPCIÓN + EMAIL =================
     @PostMapping("/{id}/inscribirse")
-    public ResponseEntity<?> inscribirseCurso(
+        public ResponseEntity<?> inscribirseCurso(
             @PathVariable Long id,
-            @RequestBody Map<String, String> body
-    ) {
+            @RequestBody Inscripcion inscripcion
+        ) {
         try {
-            String nombreAlumno = body.get("nombre");
+            cursoService.inscribirse(id, inscripcion);
 
-            if (nombreAlumno == null || nombreAlumno.isBlank()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("message", "El nombre es obligatorio"));
-            }
-
-            // 🔹 Inscripción (esto debe responder rápido)
-            Curso curso = cursoService.inscribirse(id);
-
-            // 📧 EMAIL EN SEGUNDO PLANO (NO BLOQUEA)
             new Thread(() -> {
                 try {
                     emailService.notificarCurso(
-                            curso.getNombre(),
-                            nombreAlumno
+                            inscripcion.getCurso(),
+                            inscripcion.getNombre()
                     );
-                } catch (Exception e) {
-                    System.err.println("⚠️ Error enviando correo: " + e.getMessage());
-                }
+                } catch (Exception ignored) {}
             }).start();
 
             return ResponseEntity.ok(
-                    Map.of("message", "Inscripción realizada correctamente")
+                    Map.of("message", "Inscripción registrada correctamente")
             );
 
         } catch (RuntimeException e) {
@@ -101,5 +91,4 @@ public class CursoController {
                     .body(Map.of("message", e.getMessage()));
         }
     }
-
 }
