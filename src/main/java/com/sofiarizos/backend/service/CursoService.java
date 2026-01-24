@@ -4,6 +4,8 @@ import com.sofiarizos.backend.model.Curso;
 import com.sofiarizos.backend.repository.CursoRepository;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class CursoService {
 
@@ -13,6 +15,7 @@ public class CursoService {
         this.cursoRepository = cursoRepository;
     }
 
+    @Transactional
     public Curso inscribirse(Long id) {
         Curso curso = cursoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Curso no encontrado"));
@@ -21,7 +24,10 @@ public class CursoService {
             throw new RuntimeException("Cupos agotados");
         }
 
+        // 🔒 Se descuenta UNA SOLA VEZ
         curso.setCupoDisponible(curso.getCupoDisponible() - 1);
-        return cursoRepository.save(curso);
+
+        return curso;
     }
 }
+
