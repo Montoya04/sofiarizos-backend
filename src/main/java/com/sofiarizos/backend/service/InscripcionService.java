@@ -72,4 +72,32 @@ public class InscripcionService {
     public List<Inscripcion> listarInscripciones() {
         return repository.findAll();
     }
+
+    // ================= ELIMINAR INSCRIPCIÓN =================
+    public void eliminarInscripcion(Long id) {
+
+        Inscripcion inscripcion = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Inscripción no encontrada"));
+
+        // 🔁 Recuperar curso para devolver cupo
+        Curso curso = cursoRepository.findByNombre(inscripcion.getCurso());
+        if (curso != null) {
+
+            if (curso.getNombre().equalsIgnoreCase("Masterclass Personalizada")) {
+                curso.setCupoDisponible(1);
+            } else {
+                curso.setCupoDisponible(
+                        Math.min(
+                                curso.getCupoDisponible() + 1,
+                                curso.getCupoMaximo()
+                        )
+                );
+            }
+
+            cursoRepository.save(curso);
+        }
+
+        repository.deleteById(id);
+    }
+
 }

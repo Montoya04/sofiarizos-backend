@@ -60,4 +60,28 @@ public class InscripcionController {
     public ResponseEntity<List<Inscripcion>> listarInscripciones() {
         return ResponseEntity.ok(service.listarInscripciones());
     }
+
+    // ================= ELIMINAR INSCRIPCIÓN =================
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> eliminarInscripcion(@PathVariable Long id) {
+        try {
+            service.eliminarInscripcion(id);
+
+            return ResponseEntity.ok(
+                    Map.of(
+                            "success", true,
+                            "message", "Inscripción eliminada correctamente"
+                    )
+            );
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(
+                    Map.of(
+                            "success", false,
+                            "message", e.getMessage()
+                    )
+            );
+        }
+    }
+
 }
