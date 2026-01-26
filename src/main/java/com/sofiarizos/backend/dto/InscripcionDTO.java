@@ -13,7 +13,10 @@ public class InscripcionDTO {
     private String email;
 
     @NotBlank(message = "El teléfono es obligatorio")
-    @Pattern(regexp = "^[0-9]{7,15}$", message = "El teléfono debe tener entre 7 y 15 dígitos")
+    @Pattern(
+        regexp = "^[0-9]{7,15}$",
+        message = "El teléfono debe tener entre 7 y 15 dígitos"
+    )
     private String telefono;
 
     @Size(max = 500, message = "El comentario no puede superar 500 caracteres")
@@ -21,6 +24,10 @@ public class InscripcionDTO {
 
     @NotBlank(message = "Debe seleccionar un curso")
     private String curso;
+
+    @NotNull(message = "El precio es obligatorio")
+    @Positive(message = "El precio debe ser mayor a 0")
+    private Integer precio;
 
     // Getters & Setters
     public String getNombre() { return nombre; }
@@ -37,4 +44,7 @@ public class InscripcionDTO {
 
     public String getCurso() { return curso; }
     public void setCurso(String curso) { this.curso = curso; }
+
+    public Integer getPrecio() { return precio; }
+    public void setPrecio(Integer precio) { this.precio = precio; }
 }

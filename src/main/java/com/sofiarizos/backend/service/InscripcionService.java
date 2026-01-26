@@ -17,8 +17,10 @@ public class InscripcionService {
     private final InscripcionRepository repository;
     private final CursoRepository cursoRepository;
 
-    public InscripcionService(InscripcionRepository repository,
-                              CursoRepository cursoRepository) {
+    public InscripcionService(
+            InscripcionRepository repository,
+            CursoRepository cursoRepository
+    ) {
         this.repository = repository;
         this.cursoRepository = cursoRepository;
     }
@@ -35,6 +37,7 @@ public class InscripcionService {
                 ? StringEscapeUtils.escapeHtml4(dto.getComentario())
                 : null;
         String cursoNombre = StringEscapeUtils.escapeHtml4(dto.getCurso());
+        Integer precio = dto.getPrecio();
 
         // 2️⃣ Validar curso
         Curso curso = cursoRepository.findByNombre(cursoNombre);
@@ -53,18 +56,17 @@ public class InscripcionService {
         inscripcion.setTelefono(telefono);
         inscripcion.setComentario(comentario);
         inscripcion.setCurso(cursoNombre);
+        inscripcion.setPrecio(precio);
         inscripcion.setIp(ip);
 
         // 4️⃣ Lógica de cupos
         if (curso.getNombre().equalsIgnoreCase("Masterclass Personalizada")) {
-            curso.setCupoMaximo(1);
             curso.setCupoDisponible(0);
         } else {
             curso.setCupoDisponible(curso.getCupoDisponible() - 1);
         }
 
         cursoRepository.save(curso);
-
         return repository.save(inscripcion);
     }
 
@@ -74,12 +76,12 @@ public class InscripcionService {
     }
 
     // ================= ELIMINAR INSCRIPCIÓN =================
+    @Transactional
     public void eliminarInscripcion(Long id) {
 
         Inscripcion inscripcion = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Inscripción no encontrada"));
 
-        // 🔁 Recuperar curso para devolver cupo
         Curso curso = cursoRepository.findByNombre(inscripcion.getCurso());
         if (curso != null) {
 
@@ -97,7 +99,6 @@ public class InscripcionService {
             cursoRepository.save(curso);
         }
 
-        repository.deleteById(id);
+        repository.delete(inscripcion);
     }
-
 }

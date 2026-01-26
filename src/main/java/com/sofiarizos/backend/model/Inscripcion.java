@@ -27,6 +27,10 @@ public class Inscripcion {
     private String comentario;
 
     @Column(nullable = false)
+    private Integer precio;
+
+
+    @Column(nullable = false)
     private String curso;
 
     private LocalDateTime fechaRegistro = LocalDateTime.now();
@@ -49,6 +53,10 @@ public class Inscripcion {
 
     public String getComentario() { return comentario; }
     public void setComentario(String comentario) { this.comentario = comentario; }
+
+    public Integer getPrecio() { return precio; }
+    public void setPrecio(Integer precio) { this.precio = precio; }
+
 
     public String getCurso() { return curso; }
     public void setCurso(String curso) { this.curso = curso; }
