@@ -52,9 +52,12 @@ public class SecurityConfig {
 
         // ✅ Orígenes permitidos
         config.setAllowedOriginPatterns(List.of(
-                "http://localhost:5173",
-                "https://sofiarizos-frontend.vercel.app"
+            "http://localhost:5173",
+            "https://sofiarizos-frontend.vercel.app",
+            "https://sofirizos.com",
+            "https://www.sofirizos.com"
         ));
+
 
         // ✅ Métodos permitidos
         config.setAllowedMethods(List.of(
